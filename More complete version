@@ -1,0 +1,174 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Wed May  6 23:07:28 2020
+
+Final Project....2nd try (10th iteration, though)
+    
+@author: joewa
+"""
+import numpy as np
+import matplotlib.pyplot as plt  # For subplots  
+import matplotlib.animation as ani
+#import vpython as vp
+
+"""
+Doesn't get used 
+
+class objects():
+        
+    def __init__(self,box,positions,velocities,dt):
+        self.box = box
+        self.pos = positions   
+        self.vel = velocities
+        #self.shape = box
+        #self.cells = np.random.randint(0,2,size=(box))
+    
+    #def __iter__(self):
+     #   self.i = 0
+      #  self.j = 1
+       # return self 
+                            
+    def move(self,positions,dt):
+        self.pos += dt*self.vel
+        for direction in range(len(self.box)):
+            if ((self.pos[direction] > self.box[direction]) or (self.pos[direction] < 0.0)):
+                self.vel[direction] *= -1
+    
+    def rigid_body(self,positions,velocities,dt):
+        for i in positions:
+            self.i != self.j
+            if self.i == self.j:
+                ellastic_collision=-(0.5*masses[i]*((velocities[i,0]**2)+velocities[i,1]**2))
+     """       
+
+def distance(r1,r2):
+    dr=r1-r2
+    return np.sqrt(sum(dr**2)),dr
+
+def ulj(r,epsilon,sigma):
+    return epsilon*((sigma/r)**12-(sigma/r)**6)
+
+def flj(r,epsilon=4e-4,sigma=6.): # Force of LJ 
+    return (6*epsilon/r*(2*(sigma/r)**12-(sigma/r)**6))
+
+r1=np.array([0.,0.,0.])    
+r2=np.array([0.,1.,1.])
+positions=([r1],[r2])
+
+magnitude,direction=distance(r1,r2)
+r=magnitude #distance
+d=direction
+
+epsilon=4e-4
+sigma=6.0
+
+def calc_kinetic(masses, velocities): # kinetic energy 
+    nobjects=len(positions)
+    kinetic_energy=0.
+    for i in range(nobjects):
+        kinetic_energy += 0.5*masses[i]*((velocities[i,0]**2)+velocities[i,1]**2)
+        #kinetic_energy = 0.5*sum(masses[i]*velocities[i,:]**2)
+    return kinetic_energy
+
+def calc_potential(positions,u,arg1,arg2):
+    nobjects=len(positions)
+    potential_energy = 0.0
+    for i in range(nobjects):
+        for j in range(i+1,nobjects):  
+            magnitude,direction=distance(positions[i,:], positions[j,:])
+            potential_energy+=u(magnitude,epsilon,sigma)
+    return potential_energy
+
+def calc_forces(nobjects,f,arg1,arg2):
+    nobjects=len(positions)
+    forces=np.zeros(positions.shape) #creates 2d array with nobject rows, and a column for x and y each
+    for i in range(nobjects):
+        for j in range(i+1,nobjects):
+            magnitude,direction=distance(positions[i,:], positions[j,:]) 
+            ftmp=f(magnitude,epsilon,sigma)*direction/magnitude #calculates force between two atoms using distance formula
+            forces[i,:]=forces[i,:]-ftmp[:] #moves one object in the negative direction of force
+            forces[j,:]=forces[j,:]+ftmp[:] #moves other object in the direction of force (showing they repel each other)
+    return forces 
+
+def update_positions(dt,masses,positions,velocities,forces):
+    
+    nobjects=len(masses)
+    for i in range(nobjects):
+        positions[i,:]=positions[i,:]+velocities[i,:]*dt+0.5*forces[i,:]/masses[i]*dt**2
+    return None
+
+def update_velocities(dt,masses,velocities,forces,newforces):
+    nobjects=len(masses)
+    for i in range(nobjects):
+        velocities[i,:]=velocities[i,:]+0.5*(forces[i,:]+newforces[i,:])/masses[i]*dt
+    return None
+
+
+#nx,ny=box  
+box=np.array([30.0,30.0])  # Defines the boundaries of the system  
+n=4
+nobjects=n**2 # Would nobjects=np.sqrt(n) be better or n**2 ???
+mesh=np.meshgrid(np.arange(0,box[0],box[0]/n),np.arange(0,box[1],box[1]/n))  # NB: Sought some help with uing mesh
+masses=np.array([73000.]*nobjects) # amu
+positions=np.zeros((nobjects,2))
+positions[:,0]=mesh[0].reshape(-1) # cf Numpy docs for "mesh"
+positions[:,1]=mesh[1].reshape(-1)
+velocities=np.random.uniform(0,1,(nobjects,2))*.0001 #np.zeros([2,3])  # Initial velocities 
+
+dt=20
+total_time=100000
+
+#
+# Define Lennard-Jones parameters for Ar
+#
+epsilon=4*4e-4 
+sigma=6.0 # in amu
+#
+# Compute the force at the *initial* step
+#
+forces=calc_forces(positions,flj,epsilon,sigma)
+potential=[calc_potential(positions,ulj,epsilon,sigma)] # The total potential energy of the system
+kinetic=[calc_kinetic(masses,velocities)]               # The total kinetic energy of the system
+total=[potential[-1]+kinetic[-1]]                       # Total energy of the system 
+trajectory=[np.sqrt((positions[1,0]-positions[0,0])**2+(positions[1,1]-positions[0,1])**2)] # I wanted to do random, but couldn't get it to work 
+
+#obj = [ objects(box,1,velocities,dt) for i in range(nobjects) ]  
+#
+# Animate/plot
+#
+time=[0.]
+fig, axes=plt.subplots(2,gridspec_kw={'height_ratios':[4,1]},figsize=(8,10))
+axes[0].set_xlim(-2,box[0])
+axes[1].set_ylim(-2,box[1])
+
+#a,=axes[0].plot([objects.pos[:,0] for objects in obj],[objects.pos[:,1] for objects in obj],'bo')
+a,=axes[0].plot(positions[:,0],positions[:,1],'bo',markersize=25) #markersize is NOT equivalent to scaled radius of atom 
+b,=axes[1].plot(time,total) 
+c,=axes[1].plot(time,kinetic)
+d,=axes[1].plot(time,potential)
+
+def animate(i): 
+    global time  #Took me awhile to figure out "Global" 
+    global forces
+    global velocities
+    for i in range(100): #for loop iteration 
+        update_positions(dt,masses,positions,velocities,forces) 
+        newforces=calc_forces(positions,flj,epsilon,sigma) #needed to change velocities
+        update_velocities(dt,masses,velocities,forces,newforces) 
+        forces=newforces
+    time.append(time[-1]+dt) 
+    potential.append(calc_potential(positions,ulj,epsilon,sigma)) 
+    kinetic.append(calc_kinetic(masses,velocities)) 
+    total.append(potential[-1]+kinetic[-1]) 
+    trajectory.append(np.sqrt((positions[1,0]-positions[0,0])**2+(positions[1,1]-positions[0,1])**2))
+    
+    a.set_data(positions[:,0],positions[:,1]) #reasigns positions
+    axes[1].clear() 
+    b,=axes[1].plot(time,total) #updates new data points for total energy vs time plot
+    c,=axes[1].plot(time,kinetic) #updates new data points for kinetic vs time plot
+    d,=axes[1].plot(time,potential) #updates new data points for potential vs time plot
+    return a,b,c,d
+
+anim= ani.FuncAnimation(fig,animate,frames=20, interval=10)
+
+plt.show
