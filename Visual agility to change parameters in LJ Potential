@@ -1,0 +1,62 @@
+"""
+Created on Sun Feb 23 20:35:38 2020
+
+@author: joewa
+"""
+
+import numpy as np
+import matplotlib.pyplot as plt 
+from matplotlib.widgets import Slider, Button
+
+def get_y(x,f,e,r):
+    q1 = 1
+    q2 = 2
+    ratio = r*x**(-1)
+    vdw = e*(ratio**12-2*ratio**6)
+    charge = q1*q2*(4*np.pi*x)**(-1)
+    y = f*(vdw+charge)
+    return(y)
+    
+fig, ax=plt.subplots()
+plt.subplots_adjust(bottom=0.35)
+x = np.arange(1.0,10.0,0.1)
+f0 = 1
+delta_f = 0.1
+e0 = 1
+r0 = 1
+y = get_y(x,f0,e0,r0)
+l, = plt.plot(x,y,lw=2)
+ax.margins(x=0)
+plt.ylim(-50,50)
+
+axcolor = 'lightgoldenrodyellow'
+axfact = plt.axes([0.25,0.10,0.65, 0.03], facecolor=axcolor)
+axvdw = plt.axes([0.25,0.15,0.65, 0.03], facecolor=axcolor)
+axequ = plt.axes([0.25,0.20,0.65, 0.03], facecolor=axcolor)
+
+sfact = Slider(axfact, 'Factor', 0.1, 30.0, valinit=f0, valstep=delta_f)
+svdw = Slider(axvdw, 'Vdw', 0, 10.0, valinit=e0)
+sequ = Slider(axequ, 'Equilibrium Radius', 0.1, 10.0, valinit=r0)
+
+def update(val):
+    fact = sfact.val
+    vdw=svdw.val
+    equ = sequ.val
+    
+    l.set_ydata(get_y(x,fact,vdw,equ))
+    fig.canvas.draw_idle()
+
+sfact.on_changed(update)
+svdw.on_changed(update)
+sequ.on_changed(update)
+
+resetax = plt.axes([0.8, 0.025, 0.1, 0.04])
+button = Button(resetax, 'Reset', color=axcolor, hovercolor='0.975')
+
+def reset(event):
+    sfact.reset()
+    svdw.reset()
+    sequ.reset()
+button.on_clicked(reset)
+
+plt.show()
