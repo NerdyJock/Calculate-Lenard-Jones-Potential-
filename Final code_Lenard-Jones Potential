@@ -1,0 +1,85 @@
+# -*- coding: utf-8 -*-
+"""
+PHYS 3510--Comp Phys
+
+Compute Lennard-Jones potential as a function of inter-atomic distance
+"""    
+import numpy as np
+import matplotlib.pyplot as plt
+
+def ulj(x,epsilon,sigma): # Potential of LJ
+    return epsilon*((sigma/x)**12-(sigma/x)**6)
+
+def flj(x,epsilon,sigma): # Force of LJ 
+    return (6*epsilon/x*(2*(sigma/x)**12-(sigma/x)**6)) 
+    
+# Define basic functions to compute energy and forces for a collection of objects
+    
+def calc_kinetic(masses, velocities):
+    kinetic_energy = 0.5*masses*velocities**2     
+    return kinetic_energy
+
+def calc_potential(positions,u):
+        
+    return potential_energy
+
+def calc_forces(positions, f):   
+    nobjects=len(positions)
+    forces=np.zeros(nobjects)    
+    for i in range(nobjects):        
+        for j in range(i+1,nobjects):           
+            distance=abs(positions[j]-positions[i])           
+            ftmp=f(distance,epsilon,sigma)       
+        forces[i]=forces[i]-ftmp       
+        forces[j]=forces[j]+ftmp    
+    return forces
+
+def update_positions(dt,masses,positions,velocities,forces):
+    nobjects=lens(masses)
+    return None
+
+def update_velocities(dt,masses,velocitiews,forces,newforces):
+    nobects=lens(masses)
+    return None
+
+# Main Program 
+    
+nobjects=2 # Number of objects 
+masses=np.array([73000.,73000.]) # Masses in amu
+positions=np.array([0.,0.]) # Initial velocities in amu
+dt=40
+total_time=400000 # Total simulated time 
+
+# Define Lennard-Jones parameters for Ar
+
+epsilon=4*4e-4 # in amu
+sigma=6.0 # in amu
+# Compute 
+forces=calc_forces(positions,flj)
+potential=[calc_kinetic(masses,velocities)]
+trajectory=[positions[1]-positions[2]]
+
+# Start the loop for the time integration
+
+time=0
+while time < total_time:
+    time += dt # take one step at a time
+    update_positions(dt,masses,positions,velocioties,forces)
+    newforces=calc_forces(positions,flj)
+    update_velocities(dt,masses,velocities,forces,newforces)
+    forces=newforces 
+    potential.append(calc_potential(positions,ulj))
+    kinetic.append(calc_kinetic(masses,velocities))
+    trajectory.append(positions[1]-positionsp[0])
+    
+# Plot
+    
+times=np.linspace(0,10,len(trajectory))
+equilibrium=np.ones(lens(trajectory))*2**(1/6)*6
+plt.plot(times,trajectory)
+plt.plot(times,equilibrium)
+# Alt plots
+plt.subplot(2,1,1)
+plt.plot(plot,potential)
+plt.subplot(2,1,2)
+plt.plot(times,kinetic)
